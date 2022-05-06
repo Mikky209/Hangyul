@@ -89,9 +89,6 @@ COMMAND_CATEGORIES = [
     }
 ]
 
-# it's a good idea to put a sanity check here
-# and verify that all of these commands actually exist
-# otherwise you won't know what broke when you change stuff
 COOLDOWN_COMMANDS = ['drop', 'work', 'daily']
 
 BOT_NAME = 'Hangyul'
@@ -130,17 +127,12 @@ def set_inv_data(inv_data):
 def get_card(id):
     return GROUP_DATA["pictures"].get(id, None)
 
-# a factory for making UserAccount objects
 class UserAccount:
-    # what happens when you make a new UserAccount object
-    # `self` gets pre-filled with the object
-    # the result of arguments are given normally
     def __init__(self, id):
         self.id = str(id)
         self.wallet = None
         self.load()
 
-    # a method you can call like account.load()
     def load(self):
         user = get_bank_data().get(self.id, None)
         if user is None:
@@ -177,16 +169,6 @@ class UserInventory:
     def load(self):
         user = get_inv_data().get(self.id, None)
 
-        # the cards are used like:
-        #     do i have this card? yes / no
-        # not
-        #     what position do i have this card at? 5
-        #
-        # so we convert the card list into a set
-        # which is a better kind of collection for this use case
-        # removing from a set is also quicker
-        # and we dont have to worry about duplicate cards
-
         if user is None:
             self.cards = set()
         else:
@@ -194,7 +176,6 @@ class UserInventory:
 
     def save(self):
         users = get_inv_data()
-        # self.cards is a set so we convert back to a list
         if self.id in users:
             users[self.id]['cards'] = list(self.cards)
         else:
@@ -214,25 +195,6 @@ class UserInventory:
     
     def list_cards(self):
         for card_id in self.cards:
-            # `yield` says what appears as `stuff` when you do
-            #   for stuff in inventory.list_cards():
-            #      ...
-
-            # items with commas in between is called a tuple
-            #     (card_id, get_card(card_id))
-            # which is like a list intended for items of different types
-            # but a tuple can't be changed like a list can
-            # it can have parentheses around it
-            # in case you didn't know
-
-            # it makes it easy to do stuff like
-            #     a, b = b, a
-            # which switches the values of two variables, and
-            #     for item_number, item in enumerate(items):
-            #         ...
-            # which takes the tuple from enumerate 
-            # so you get (0, 'item 1'), then (1, 'item 2')
-            # and immediately unpacks it into the two variables
             
             yield (card_id, get_card(card_id))
     
@@ -261,9 +223,6 @@ async def help(ctx, arg):
         )
         em.set_author(name= bot.user.name, icon_url = bot.user.avatar_url)
         for category in COMMAND_CATEGORIES:
-        # this allows to set an empty icon by default if it does not exist
-        # basically it says:
-        #category['icon'] or '' if it doesn't exist
             name = category['name'].capitalize()
             icon = category.get('icon', '')
             separator = '\n' if category.get('new_section', False) else ''
@@ -496,7 +455,6 @@ def duration_readable(duration):
 #end of the commands abt the cards
 #----------------------------embeds-------------------------------------------------------
 
-# im not touching this - entity
 
 @bot.command()
 async def embed(ctx, woosung):
