@@ -2,7 +2,6 @@ import os
 import discord
 import random
 import json
-import os
 from discord.ext import commands
 from discord.ext.commands.cooldowns import BucketType
 import datetime
@@ -70,17 +69,13 @@ COMMAND_CATEGORIES = [
             'sell': {},
             'sales': {},
             'withdraw': {}
-        },
-        'new_section': True
+        }
     },
     {
         'name': 'settings',
         'icon': '⚙️',
         'commands': {
-            'help': {  
-                'help': f'This command shows the list of available commands. \
-                Use `{PREFIX}help command` for help with a certain command.'
-            },
+            'help': {},
             'prefix': {},
             'support': {},
             'reminder': {},
@@ -215,51 +210,621 @@ async def on_ready():
 #-----------------------------help------------------------------------------------------
 
 @bot.command()
-async def help(ctx, arg):
-    if arg == None:
-        em = discord.Embed(
-            title = f'{BOT_NAME} Help Commands',
-            color = 0x1ad39f
+async def help(ctx, *, arg = None):
+    if arg is None:
+        embed = discord.Embed(
+        title = f'{BOT_NAME} Help Commands',
+        color = 0x1ad39f
         )
-        em.set_author(name= bot.user.name, icon_url = bot.user.avatar_url)
-        for category in COMMAND_CATEGORIES:
-            name = category['name'].capitalize()
-            icon = category.get('icon', '')
-            separator = '\n' if category.get('new_section', False) else ''
-            command_list = category['commands'].keys()
-            command_list = [f'`{command}`' for command in command_list]
-            em.add_field(
-                name = f'{separator}{name}{icon}', 
-                value = ' '.join(command_list), 
-                inline = False
-            )
-        em.set_footer(text=f'Use {PREFIX}help [category] for more details')
-        await ctx.send(embed = em)
+        embed.set_author(name= bot.user.name, icon_url = bot.user.avatar_url)
+        embed.add_field(
+            name = 'User 👤',
+            value = "`profile` `bio` `favorite`",
+            inline = False
+        )
+        embed.add_field(
+            name = 'Cards 🎴',
+            value = "`daily` `drop` `inventory` `burn` `gift` `view` `cooldown`",
+            inline = False
+        )
+        embed.add_field(
+            name = 'Currency 💰 ',
+            value = "`balance` `work` `give`",
+            inline = False
+        )
+        embed.add_field(
+            name = 'Shop 🛒',
+            value = "`shop` `buy` `sell` `sales` `withdraw`",
+            inline = False
+        )
+        embed.add_field(
+            name = 'Wishlist ❤️',
+            value = "`wishlist` `wishlistadd` `wishlistremove`",
+            inline = False
+        )
+        embed.add_field(
+            name = 'Settings ⚙️',
+            value = "`help` `prefix` `support` `remind` `vote`",
+            inline = False
+        )
+        embed.set_footer(text=f'Use {PREFIX}help [command] for more details')
+        return await ctx.send(embed = embed)
     else:
         if arg == "profile":
             em = discord.Embed(
-        title = '**Profile Help**',
-        color = 0x1ad39f
-    )
-    em.add_field(
+            title = '**Profile Help**',
+            color = 0x1ad39f
+            )
+            em.add_field(
             name = "Aliases", 
             value = "p", 
             inline = False
-        )
-    em.add_field(
+            )
+            em.add_field(
             name = "Description", 
             value = "Show your profile", 
             inline = False
-        )
-    em.add_field(
+            )
+            em.add_field(
             name = "Usage", 
             value = f"{PREFIX}profile [mention/id]", 
             inline = False
-        )
-    em.set_author(name= bot.user.name, icon_url = bot.user.avatar_url)
-    await ctx.send(embed = em)
+            )
+            em.set_author(name= bot.user.name, icon_url = bot.user.avatar_url)
+            await ctx.send(embed = em)
+        elif arg == "bio":
+            em = discord.Embed(
+            title = '**Bio Help**',
+            color = 0x1ad39f
+            )
+            em.add_field(
+            name = "Aliases", 
+            value = "b", 
+            inline = False
+            )
+            em.add_field(
+            name = "Description", 
+            value = "Sets your bio", 
+            inline = False
+            )
+            em.add_field(
+            name = "Usage", 
+            value = f"{PREFIX}bio [text]", 
+            inline = False
+            )
+            em.set_author(name= bot.user.name, icon_url = bot.user.avatar_url)
+            await ctx.send(embed = em)
         
+        elif arg == "favorite":
+            em = discord.Embed(
+            title = '**Favorite Help**',
+            color = 0x1ad39f
+            )
+            em.add_field(
+            name = "Aliases", 
+            value = "fav / f", 
+            inline = False
+            )
+            em.add_field(
+            name = "Description", 
+            value = "Sets a card as your favorite", 
+            inline = False
+            )
+            em.add_field(
+            name = "Usage", 
+            value = f"{PREFIX}favorite [card code]", 
+            inline = False
+            )
+            em.set_author(name= bot.user.name, icon_url = bot.user.avatar_url)
+            await ctx.send(embed = em)
+        
+        elif arg == "daily":
+            em = discord.Embed(
+            title = '**Daily Help**',
+            color = 0x1ad39f
+            )
+            em.add_field(
+            name = "Aliases", 
+            value = "None", 
+            inline = False
+            )
+            em.add_field(
+            name = "Description", 
+            value = "Claim your daily card and currency", 
+            inline = False
+            )
+            em.add_field(
+            name = "Usage", 
+            value = f"{PREFIX}daily", 
+            inline = False
+            )
+            em.set_author(name= bot.user.name, icon_url = bot.user.avatar_url)
+            await ctx.send(embed = em)
+        
+        elif arg == "drop":
+            em = discord.Embed(
+            title = '**Drop Help**',
+            color = 0x1ad39f
+            )
+            em.add_field(
+            name = "Aliases", 
+            value = "d", 
+            inline = False
+            )
+            em.add_field(
+            name = "Description", 
+            value = "Drops a random card", 
+            inline = False
+            )
+            em.add_field(
+            name = "Usage", 
+            value = f"{PREFIX}drop", 
+            inline = False
+            )
+            em.set_author(name= bot.user.name, icon_url = bot.user.avatar_url)
+            await ctx.send(embed = em)
 
+        elif arg == "inventory":
+            em = discord.Embed(
+            title = '**Inventory Help**',
+            color = 0x1ad39f
+            )
+            em.add_field(
+            name = "Aliases", 
+            value = "inv", 
+            inline = False
+            )
+            em.add_field(
+            name = "Description", 
+            value = "Shows your inventory", 
+            inline = False
+            )
+            em.add_field(
+            name = "Usage", 
+            value = f"{PREFIX}inventory [mention/id] [group/idol/rarity]", 
+            inline = False
+            )
+            em.set_author(name= bot.user.name, icon_url = bot.user.avatar_url)
+            await ctx.send(embed = em)
+
+        elif arg == "burn":
+            em = discord.Embed(
+            title = '**Burn Help**',
+            color = 0x1ad39f
+            )
+            em.add_field(
+            name = "Aliases", 
+            value = "b", 
+            inline = False
+            )
+            em.add_field(
+            name = "Description", 
+            value = "Burns the card", 
+            inline = False
+            )
+            em.add_field(
+            name = "Usage", 
+            value = f"{PREFIX}burn [cards codes]", 
+            inline = False
+            )
+            em.set_author(name= bot.user.name, icon_url = bot.user.avatar_url)
+            await ctx.send(embed = em)
+
+        elif arg == "gift":
+            em = discord.Embed(
+            title = '**Gift Help**',
+            color = 0x1ad39f
+            )
+            em.add_field(
+            name = "Aliases", 
+            value = "None", 
+            inline = False
+            )
+            em.add_field(
+            name = "Description", 
+            value = "Gift cards to other users", 
+            inline = False
+            )
+            em.add_field(
+            name = "Usage", 
+            value = f"{PREFIX}gift [mention/id] [cards codes]", 
+            inline = False
+            )
+            em.set_author(name= bot.user.name, icon_url = bot.user.avatar_url)
+            await ctx.send(embed = em)
+        
+        elif arg == "view":
+            em = discord.Embed(
+            title = '**Drop Help**',
+            color = 0x1ad39f
+            )
+            em.add_field(
+            name = "Aliases", 
+            value = "v / vw", 
+            inline = False
+            )
+            em.add_field(
+            name = "Description", 
+            value = "View a card of your inventory", 
+            inline = False
+            )
+            em.add_field(
+            name = "Usage", 
+            value = f"{PREFIX}view [card code]", 
+            inline = False
+            )
+            em.set_author(name= bot.user.name, icon_url = bot.user.avatar_url)
+            await ctx.send(embed = em)
+
+        elif arg == "cooldown":
+        
+            em = discord.Embed(
+            title = '**Cooldown Help**',
+            color = 0x1ad39f
+            )
+            em.add_field(
+            name = "Aliases", 
+            value = "cd", 
+            inline = False
+            )
+            em.add_field(
+            name = "Description", 
+            value = "Checks your cooldowns", 
+            inline = False
+            )
+            em.add_field(
+            name = "Usage", 
+            value = f"{PREFIX}cd", 
+            inline = False
+            )
+            em.set_author(name= bot.user.name, icon_url = bot.user.avatar_url)
+            await ctx.send(embed = em)
+
+        elif arg == "balance":
+            em = discord.Embed(
+            title = '**Balance Help**',
+            color = 0x1ad39f
+            )
+            em.add_field(
+            name = "Aliases", 
+            value = "bal", 
+            inline = False
+            )
+            em.add_field(
+            name = "Description", 
+            value = "Shows your currency", 
+            inline = False
+            )
+            em.add_field(
+            name = "Usage", 
+            value = f"{PREFIX}balance", 
+            inline = False
+            )
+            em.set_author(name= bot.user.name, icon_url = bot.user.avatar_url)
+            await ctx.send(embed = em)
+
+        elif arg == "work":
+            em = discord.Embed(
+            title = '**Work Help**',
+            color = 0x1ad39f
+            )
+            em.add_field(
+            name = "Aliases", 
+            value = "None", 
+            inline = False
+            )
+            em.add_field(
+            name = "Description", 
+            value = "Get paid for your work", 
+            inline = False
+            )
+            em.add_field(
+            name = "Usage", 
+            value = f"{PREFIX}work", 
+            inline = False
+            )
+            em.set_author(name= bot.user.name, icon_url = bot.user.avatar_url)
+            await ctx.send(embed = em)
+
+        elif arg == "give":
+            em = discord.Embed(
+            title = '**Give Help**',
+            color = 0x1ad39f
+            )
+            em.add_field(
+            name = "Aliases", 
+            value = "None", 
+            inline = False
+            )
+            em.add_field(
+            name = "Description", 
+            value = "Give money to other users", 
+            inline = False
+            )
+            em.add_field(
+            name = "Usage", 
+            value = f"{PREFIX}give [mention/id] [amount]", 
+            inline = False
+            )
+            em.set_author(name= bot.user.name, icon_url = bot.user.avatar_url)
+            await ctx.send(embed = em)
+
+        elif arg == "shop":
+            em = discord.Embed(
+            title = '**Give Help**',
+            color = 0x1ad39f
+            )
+            em.add_field(
+            name = "Aliases", 
+            value = "None", 
+            inline = False
+            )
+            em.add_field(
+            name = "Description", 
+            value = "Search for cards to buy", 
+            inline = False
+            )
+            em.add_field(
+            name = "Usage", 
+            value = f"{PREFIX}shop [group/idol/rarity]", 
+            inline = False
+            )
+            em.set_author(name= bot.user.name, icon_url = bot.user.avatar_url)
+            await ctx.send(embed = em)
+
+        elif arg == "buy":
+            em = discord.Embed(
+            title = '**Buy Help**',
+            color = 0x1ad39f
+            )
+            em.add_field(
+            name = "Aliases", 
+            value = "None", 
+            inline = False
+            )
+            em.add_field(
+            name = "Description", 
+            value = "Buy a card from the shop", 
+            inline = False
+            )
+            em.add_field(
+            name = "Usage", 
+            value = f"{PREFIX}buy [card code] [price]", 
+            inline = False
+            )
+            em.set_author(name= bot.user.name, icon_url = bot.user.avatar_url)
+            await ctx.send(embed = em)
+
+        elif arg == "sell":
+            em = discord.Embed(
+            title = '**Sell Help**',
+            color = 0x1ad39f
+            )
+            em.add_field(
+            name = "Aliases", 
+            value = "None", 
+            inline = False
+            )
+            em.add_field(
+            name = "Description", 
+            value = "Sell a card on the shop", 
+            inline = False
+            )
+            em.add_field(
+            name = "Usage", 
+            value = f"{PREFIX}sell [card code] [price]", 
+            inline = False
+            )
+            em.set_author(name= bot.user.name, icon_url = bot.user.avatar_url)
+            await ctx.send(embed = em)
+        
+        elif arg == "Sales":
+            em = discord.Embed(
+            title = '**Sales Help**',
+            color = 0x1ad39f
+            )
+            em.add_field(
+            name = "Aliases", 
+            value = "None", 
+            inline = False
+            )
+            em.add_field(
+            name = "Description", 
+            value = "Shows the code of the cards your buying or selling", 
+            inline = False
+            )
+            em.add_field(
+            name = "Usage", 
+            value = f"{PREFIX}sales", 
+            inline = False
+            )
+            em.set_author(name= bot.user.name, icon_url = bot.user.avatar_url)
+            await ctx.send(embed = em)
+        
+        elif arg == "withdraw":
+            em = discord.Embed(
+            title = '**Withdraw Help**',
+            color = 0x1ad39f
+            )
+            em.add_field(
+            name = "Aliases", 
+            value = "wd", 
+            inline = False
+            )
+            em.add_field(
+            name = "Description", 
+            value = "Witdraw a card from the shop", 
+            inline = False
+            )
+            em.add_field(
+            name = "Usage", 
+            value = f"{PREFIX}withdraw [card code]", 
+            inline = False
+            )
+            em.set_author(name= bot.user.name, icon_url = bot.user.avatar_url)
+            await ctx.send(embed = em)
+
+        elif arg == "wishlist":
+            em = discord.Embed(
+            title = '**Wishlist Help**',
+            color = 0x1ad39f
+            )
+            em.add_field(
+            name = "Aliases", 
+            value = "wl", 
+            inline = False
+            )
+            em.add_field(
+            name = "Description", 
+            value = "Shows your wishlist or of the other users", 
+            inline = False
+            )
+            em.add_field(
+            name = "Usage", 
+            value = f"{PREFIX}wishlist [mention/id]", 
+            inline = False
+            )
+            em.set_author(name= bot.user.name, icon_url = bot.user.avatar_url)
+            await ctx.send(embed = em)
+
+        elif arg == "wishlist add":
+            em = discord.Embed(
+            title = '**Wishlist add Help**',
+            color = 0x1ad39f
+            )
+            em.add_field(
+            name = "Aliases", 
+            value = "wl add / wa", 
+            inline = False
+            )
+            em.add_field(
+            name = "Description", 
+            value = "Adds a card to your wishlist", 
+            inline = False
+            )
+            em.add_field(
+            name = "Usage", 
+            value = f"{PREFIX}wishlistadd [card code]", 
+            inline = False
+            )
+            em.set_author(name= bot.user.name, icon_url = bot.user.avatar_url)
+            await ctx.send(embed = em)
+
+        elif arg == "wishlist remove":
+            em = discord.Embed(
+            title = '**Wishlist remove Help**',
+            color = 0x1ad39f
+            )
+            em.add_field(
+            name = "Aliases", 
+            value = "wl remove / wr ", 
+            inline = False
+            )
+            em.add_field(
+            name = "Description", 
+            value = "Removes a card from your wishlist", 
+            inline = False
+            )
+            em.add_field(
+            name = "Usage", 
+            value = f"{PREFIX}wishlist remove [card code]", 
+            inline = False
+            )
+            em.set_author(name= bot.user.name, icon_url = bot.user.avatar_url)
+            await ctx.send(embed = em)
+
+        elif arg == "prefix":
+            em = discord.Embed(
+            title = '**Prefix Help**',
+            color = 0x1ad39f
+            )
+            em.add_field(
+            name = "Aliases", 
+            value = "None", 
+            inline = False
+            )
+            em.add_field(
+            name = "Description", 
+            value = "Sets prefix for the server", 
+            inline = False
+            )
+            em.add_field(
+            name = "Usage", 
+            value = f"{PREFIX}prefix [prefix]", 
+            inline = False
+            )
+            em.set_author(name= bot.user.name, icon_url = bot.user.avatar_url)
+            await ctx.send(embed = em)
+
+        elif arg == "support":
+            em = discord.Embed(
+            title = '**Support Help**',
+            color = 0x1ad39f
+            )
+            em.add_field(
+            name = "Aliases", 
+            value = "sup", 
+            inline = False
+            )
+            em.add_field(
+            name = "Description", 
+            value = "Sends the link to the Hangyul Support Server", 
+            inline = False
+            )
+            em.add_field(
+            name = "Usage", 
+            value = f"{PREFIX}support", 
+            inline = False
+            )
+            em.set_author(name= bot.user.name, icon_url = bot.user.avatar_url)
+            await ctx.send(embed = em)
+
+        elif arg == "remind":
+            em = discord.Embed(
+            title = '**Reminder Help**',
+            color = 0x1ad39f
+            )
+            em.add_field(
+            name = "Aliases", 
+            value = "r", 
+            inline = False
+            )
+            em.add_field(
+            name = "Description", 
+            value = "Sets a reminder", 
+            inline = False
+            )
+            em.add_field(
+            name = "Usage", 
+            value = f"{PREFIX}remind [duration] [text]", 
+            inline = False
+            )
+            em.set_author(name= bot.user.name, icon_url = bot.user.avatar_url)
+            em.set_footer(text = f"example: {PREFIX}remind 1h30min work")
+            await ctx.send(embed = em)
+
+        elif arg == "vote":
+            em = discord.Embed(
+            title = '**Vote Help**',
+            color = 0x1ad39f
+            )
+            em.add_field(
+            name = "Aliases", 
+            value = "None", 
+            inline = False
+            )
+            em.add_field(
+            name = "Description", 
+            value = "Shows a vote link", 
+            inline = False
+            )
+            em.add_field(
+            name = "Usage", 
+            value = f"{PREFIX}vote", 
+            inline = False
+            )
+            em.set_author(name= bot.user.name, icon_url = bot.user.avatar_url)
+            await ctx.send(embed = em)
 
 #-----------------------------balance--------------------------------------------------------
 
