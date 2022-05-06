@@ -28,62 +28,6 @@ EMOJIS = {
     'heart': '🤍'
 }
 
-COMMAND_CATEGORIES = [
-    {
-        'name': 'user',
-        'icon': '👤',
-        'commands': {
-            'profile': { 'help': 'this command does stuff' },
-            'bio': {},
-            'favorite': {},
-        }
-    },
-    {
-        'name': 'cards',
-        'icon': '🎴',
-        'commands': {
-            'daily': {},
-            'drop': {},
-            'inventory': {},
-            'burn': {},
-            'gift': {},
-            'view': {},
-            'cooldown': {}
-        }
-    },
-    {
-        'name': 'currency',
-        'icon': '💰',
-        'commands': {
-            'balance': {},
-            'work': {},
-            'give': {},
-        }
-    },
-    {
-        'name': 'shop',
-        'icon': '🛒',
-        'commands': {
-            'shop': {},
-            'buy': {},
-            'sell': {},
-            'sales': {},
-            'withdraw': {}
-        }
-    },
-    {
-        'name': 'settings',
-        'icon': '⚙️',
-        'commands': {
-            'help': {},
-            'prefix': {},
-            'support': {},
-            'reminder': {},
-            'vote': {}
-        }
-    }
-]
-
 COOLDOWN_COMMANDS = ['drop', 'work', 'daily']
 
 BOT_NAME = 'Hangyul'
@@ -955,7 +899,7 @@ async def view(ctx, card_id):
   if not inventory.has_card(card_id):
      return await ctx.send("You don't have that card!")
   em = discord.Embed(description = f"{format_name(card['member'])}" +
-    "\n" + f"{card_id}" + "\n" + f"{card['rarity']}", color = 0x1ad39f)
+    "\n" + f"`{card_id}`", color = 0x1ad39f)
   em.set_image(url = card['url'])
   em.set_author(name = f"{ctx.author.name} is viewing a card", icon_url = ctx.author.avatar_url)
   await ctx.send(embed = em)
