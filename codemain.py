@@ -832,7 +832,7 @@ async def help(ctx, *, arg = None):
 
 #-----------------------------profile--------------------------------------------------------
 
-@bot.command()
+@bot.command(aliases=["p"])
 async def profile(ctx, user:discord.Member=None):
     user = user or ctx.author
     balance = UserAccount(user.id)
@@ -845,7 +845,7 @@ async def profile(ctx, user:discord.Member=None):
     em.set_author(name = ctx.author.name, icon_url=ctx.author.avatar_url)
     await ctx.send(embed = em)
 
-@bot.command(aliases=["b", "bio"])
+@bot.command(aliases=["bio"])
 async def biography(ctx, message=None):
     if message == None:
         message = " "
@@ -855,18 +855,26 @@ async def biography(ctx, message=None):
     await ctx.send(embed = em)
     bio.add_bio(message)
 
+@bot.command(aliases=["fav", "f"])
+async def favorite(ctx, card_id=None):
+    if card_id == None:
+        return await ctx.send("You need to supply the card ID !")
+    card = get_card(card_id)
+    if card is None:
+        return await ctx.send("That card doesn't exist !")
+    user = ctx.author
+    inventory = UserInventory(user.id)
+    if not inventory.has_card(card_id):
+        return await ctx.send("You don't have that card !")
+    em = discord.Embed(description = f"You successfully add {format_name(card['member'])} as your favorite", color = 0x1ad39f)
+    em.set_author(name = f"{ctx.author.name} is setting a favorite card", icon_url = ctx.author.avatar_url)
+    await ctx.send(embed = em)
+    favorite.add_card(card_id)
+
 #-----------------------------balance--------------------------------------------------------
 
-@bot.command()
+@bot.command(aliases=["bal"])
 async def balance(ctx):
-    await command_balance(ctx)
-
-@bot.command()
-async def bal(ctx):
-    await command_balance(ctx)
-
-@bot.command()
-async def command_balance(ctx):
     account = UserAccount(ctx.author.id)
     emojis = EMOJIS['coin']
     em = discord.Embed(description = f'**{ctx.author.mention} \
@@ -878,7 +886,7 @@ async def command_balance(ctx):
 
 #----------------------------work-------------------------------------------------------
 
-@bot.command(name='work')
+@bot.command(name='work', aliases = ["w"])
 @commands.cooldown(rate=1, per=1*HOUR, type=BucketType.user)
 async def work(ctx):
     account = UserAccount(ctx.author.id)
@@ -921,7 +929,7 @@ async def daily(ctx):
 
 #----------------------------inventory---------------------------------------------------------
 
-@bot.command()
+@bot.command(aliases=["inventory"])
 async def inv(ctx, user:discord.Member=None):
     user = user or ctx.author
     inventory = UserInventory(user.id)
@@ -954,7 +962,7 @@ def format_name(id):
 
 #----------------------------drop---------------------------------------------------------
 
-@bot.command()
+@bot.command(aliases=["d"])
 @commands.cooldown(rate=1, per=10*MINUTE, type=BucketType.user)
 async def drop(ctx):
     user = ctx.author
@@ -972,7 +980,7 @@ async def drop(ctx):
 
 #-----------------------------burn--------------------------------------------------------
 
-@bot.command()
+@bot.command(aliases=["bn", "b"])
 async def burn(ctx, card_id=None):
     if card_id == None:
         return await ctx.send("You need to supply the card ID !")
@@ -990,7 +998,7 @@ async def burn(ctx, card_id=None):
 
 #----------------------------view-------------------------------------------------------
 
-@bot.command()
+@bot.command(aliases = ["vw", "v"])
 async def view(ctx, card_id=None):
   if card_id == None:
     return await ctx.send("You need to supply the card ID!")
@@ -1075,16 +1083,8 @@ async def cooldown_error(ctx, error):
     )
     await ctx.send(embed=em, delete_after=5)
 
-@bot.command()
-async def cd(ctx):
-    await command_cooldown(ctx)
-
-@bot.command()
+@bot.command(aliases = ["cd"]) 
 async def cooldown(ctx):
-    await command_cooldown(ctx)
-
-@bot.command() 
-async def command_cooldown(ctx):
     em = discord.Embed(
         title='Here are your cooldowns',
         color= 0x1ad39f
