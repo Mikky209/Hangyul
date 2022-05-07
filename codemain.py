@@ -40,6 +40,7 @@ COOLDOWN_COMMANDS = ['drop', 'work', 'daily']
 
 BOT_NAME = 'Hangyul'
 
+
 #----------------------------accounts----------------------------------------------------
 
 
@@ -100,6 +101,10 @@ class UserAccount:
     
     def set_balance(self, balance):
         self.wallet = balance
+        self.save()
+    
+    def remove_balance(self, balance): 
+        self.wallet -= balance
         self.save()
 
     def add_balance(self, balance):
@@ -831,7 +836,7 @@ async def daily(ctx):
     daily_coins = random.randrange(101)
 
     em = discord.Embed(
-        title = f"{ctx.author.name} Here are your daily cards !\n\
+        title = f"{ctx.author.name} here are your daily cards !\n\
         You also get {daily_coins} coins!",
         color = 0x1ad39f
     )
@@ -845,35 +850,35 @@ async def daily(ctx):
 #----------------------------inventory---------------------------------------------------------
 
 @bot.command()
-async def inv(ctx):
-    user = ctx.author
+async def inv(ctx, user:discord.Member=None):
+    user = user or ctx.author
     inventory = UserInventory(user.id)
 
     names = [
-        format_name(card['member']) + "\n" + card['code'] + ' ' + card['rarity'] + '\n'
+        format_name(card['member']) + "\n" + card['code'] + '\n' + card['rarity'] + '\n'
         for (_, card) in inventory.list_cards()
     ]
+    names = sorted(names)
     if len(names) > 0:
         names = ''.join(names)
     else:
         names = 'Empty'
 
     em = discord.Embed(
-        title = f"{user.name}'s inventory",
         color = 0x1ad39f
     )
     em.set_author(
-        name= f"{user.name}'s inventory",
-        icon_url = user.avatar_url
+        name= f"{ctx.author}'s request ",
+        icon_url = ctx.author.avatar_url
     )
-    em.add_field(name = 'Inventory', value = names, inline=False)
+    em.add_field(name = f"{user.mention}'s inventory", value = names, inline=False)
     await ctx.send(embed = em)
 
 def format_name(id):
     parts = id.split(':')
     name = parts[1]
     group = parts[0]
-    return "**" + group + "**" + ' ' + name    
+    return "**" + group + "**" + ' ' + name
 
 #----------------------------drop---------------------------------------------------------
 
@@ -893,11 +898,29 @@ async def drop(ctx):
     
     inventory.add_card(card_id)
 
+#-----------------------------burn--------------------------------------------------------
+
+@bot.command()
+async def burn(ctx, card_id=None):
+    if card_id == None:
+        return await ctx.send("You need to supply the card ID !")
+    card = get_card(card_id)
+    if card is None:
+        return await ctx.send("That card doesn't exist !")
+    user = ctx.author
+    inventory = UserInventory(user.id)
+    if not inventory.has_card(card_id):
+        return await ctx.send("You don't have that card !")
+    em = discord.Embed(description = f"You successfully burn {format_name(card['member'])}", color = 0x1ad39f)
+    em.set_author(name = f"{ctx.author.name} is burning a card", icon_url = ctx.author.avatar_url)
+    await ctx.send(embed = em)
+    inventory.remove_card(card_id)
+
 #----------------------------view-------------------------------------------------------
 
 @bot.command()
-async def view(ctx, card_id):
-  if not card_id:
+async def view(ctx, card_id=None):
+  if card_id == None:
     return await ctx.send("You need to supply the card ID!")
   card = get_card(card_id)
   if card is None:
@@ -911,6 +934,55 @@ async def view(ctx, card_id):
   em.set_image(url = card['url'])
   em.set_author(name = f"{ctx.author.name} is viewing a card", icon_url = ctx.author.avatar_url)
   await ctx.send(embed = em)
+
+#----------------------------gift/give-------------------------------------------------------
+
+@bot.command()
+async def gift(ctx, member:discord.Member=None, card_id=None):
+    
+    if member == None:
+        return await ctx.send("You need to mention someone!")   
+    if card_id == None:
+        return await ctx.send("You need to supply card ID!")
+    card = get_card(card_id)
+    if card is None:
+        return await ctx.send("That card doesn't exist !")
+    user = ctx.author
+    inventory_send = UserInventory(user.id)
+    inventory_receive = UserInventory(member.id)
+    if not inventory_send.has_card(card_id):
+        return await ctx.send("You don't have that card !")
+    em = discord.Embed(description = f"You successfully gift {format_name(card['member'])}", color = 0x1ad39f)
+    em.set_author(name = f"{ctx.author.name} is gifting a card", icon_url = ctx.author.avatar_url)
+    await ctx.send(embed = em)
+    inventory_send.remove_card(card_id)
+    inventory_receive.add_card(card_id)
+@gift.error
+async def gift_error(ctx, error):
+    if isinstance(error, commands.MemberNotFound):
+        await ctx.send("This member doesn't exist !")
+
+@bot.command()
+async def give(ctx, member:discord.Member=None, amount:int=None):
+    
+    if member == None:
+        return await ctx.send("You need to mention someone!")   
+    if amount == None:
+        return await ctx.send("You need to supply an amount!")
+    user = ctx.author
+    bank_send = UserAccount(user.id)
+    bank_receive = UserAccount(member.id)
+    if amount > bank_send.get_balance():
+        return await ctx.send("You don't have enough !")
+    em = discord.Embed(description = f"You successfully give {amount}", color = 0x1ad39f)
+    em.set_author(name = f"{ctx.author.name} is giving money", icon_url = ctx.author.avatar_url)
+    await ctx.send(embed = em)
+    bank_send.remove_balance(amount)
+    bank_receive.add_balance(amount)
+@gift.error
+async def gift_error(ctx, error):
+    if isinstance(error, commands.MemberNotFound):
+        await ctx.send("This member doesn't exist !")
 
 #----------------------------cooldown-------------------------------------------------------
 
