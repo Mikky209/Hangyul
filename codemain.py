@@ -75,6 +75,53 @@ def set_inv_data(inv_data):
 def get_card(id):
     return GROUP_DATA["pictures"].get(id, None)
 
+BIO_FILE = "biography.json"
+
+def get_bio_data():
+    try:
+        with open(BIO_FILE, "r") as bio_file:
+            bio_data = json.load(bio_file)
+        return bio_data
+    except FileNotFoundError:
+        return {}
+
+def set_bio_data(bio_data):
+    with open(BIO_FILE, "w") as bio_file:
+        json.dump(bio_data, bio_file)
+
+class UserBiography:
+    def __init__(self, id):
+        self.id = str(id)
+        self.bios = None
+        self.load()
+
+    def load(self):
+        user = get_bio_data().get(self.id, None)
+        if user is None:
+            self.bios = "Nothing to see here"
+        else:
+            self.bios = user.get('biography', {})
+
+    def save(self):
+        users = get_bio_data()
+        if self.id in users:
+            users[self.id]['biography'] = self.bios
+        else:
+            users[self.id] = { 'biography': self.bios }
+        set_bio_data(users)
+    
+    def get_bio(self):
+        return self.bios
+
+    def set_bio(self, texte):
+        self.bios = texte 
+        self.save()
+    
+    def add_bio(self, texte):
+        self.bios = texte
+        self.save()
+
+
 class UserAccount:
     def __init__(self, id):
         self.id = str(id)
@@ -783,6 +830,31 @@ async def help(ctx, *, arg = None):
             em.set_author(name= bot.user.name, icon_url = bot.user.avatar_url)
             await ctx.send(embed = em)
 
+#-----------------------------profile--------------------------------------------------------
+
+@bot.command()
+async def profile(ctx, user:discord.Member=None):
+    user = user or ctx.author
+    balance = UserAccount(user.id)
+    emoji = EMOJIS["coin"]
+    biography = UserBiography(user.id)
+    
+    em = discord.Embed(title = f"{user.name}'s Profile")
+    em.add_field(name = f"bio : `{biography.get_bio ()}`" , value = f"👤 User: {user.mention} \n \
+        🗃️ Cards: \n 💰 Balance: {balance.get_balance()} {emoji} \n 💙 Favorite:")
+    em.set_author(name = ctx.author.name, icon_url=ctx.author.avatar_url)
+    await ctx.send(embed = em)
+
+@bot.command(aliases=["b", "bio"])
+async def biography(ctx, message=None):
+    if message == None:
+        message = " "
+    bio = UserBiography(ctx.author.id)
+    em = discord.Embed(description = "Your Bio was successfully updated.", color=0x1ad39f)
+    em.set_author(name = f"{ctx.author.name}'s Bio", icon_url=ctx.author.avatar_url)
+    await ctx.send(embed = em)
+    bio.add_bio(message)
+
 #-----------------------------balance--------------------------------------------------------
 
 @bot.command()
@@ -871,7 +943,7 @@ async def inv(ctx, user:discord.Member=None):
         name= f"{ctx.author}'s request ",
         icon_url = ctx.author.avatar_url
     )
-    em.add_field(name = f"{user.mention}'s inventory", value = names, inline=False)
+    em.add_field(name = f"{user.name}'s inventory", value = names, inline=False)
     await ctx.send(embed = em)
 
 def format_name(id):
@@ -964,6 +1036,7 @@ async def gift_error(ctx, error):
 
 @bot.command()
 async def give(ctx, member:discord.Member=None, amount:int=None):
+    emojis = EMOJIS["coin"]
     
     if member == None:
         return await ctx.send("You need to mention someone!")   
@@ -974,7 +1047,7 @@ async def give(ctx, member:discord.Member=None, amount:int=None):
     bank_receive = UserAccount(member.id)
     if amount > bank_send.get_balance():
         return await ctx.send("You don't have enough !")
-    em = discord.Embed(description = f"You successfully give {amount}", color = 0x1ad39f)
+    em = discord.Embed(description = f"You successfully give {amount}{emojis}", color = 0x1ad39f)
     em.set_author(name = f"{ctx.author.name} is giving money", icon_url = ctx.author.avatar_url)
     await ctx.send(embed = em)
     bank_send.remove_balance(amount)
