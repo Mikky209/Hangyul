@@ -1,3 +1,4 @@
+from enum import IntFlag
 import os
 import discord
 import random
@@ -19,8 +20,15 @@ with open('groups.json', 'rb') as f:
 
 secret_token = os.getenv("TOKEN")
 
+times = [
+    ("year", 365*24*60*60),
+    ("day", 24*60*60),
+    ("hour", 60*60),
+    ("min", 60),
+    ("sec", 1)
+]
+HOUR = 60*60
 MINUTE = 60
-HOUR = 60*MINUTE
 
 EMOJIS = {
     'coin': '<:X1Coin:926954191279231067>',
@@ -944,22 +952,31 @@ async def command_cooldown(ctx):
         )
     await ctx.send(embed = em)
 
-def cooldown_readable(duration):
-    if duration < 1:
+def cooldown_readable(seconds):
+    if seconds < 1:
         return EMOJIS['check']
-    return duration_readable(duration)
+    return format_duration(seconds)
 
-def duration_readable(duration):
-   durations = []
-   duration = int(duration)
-   for (unit, magnitude) in [('h', HOUR), ('m', MINUTE), ('s', 1)]:
-        if duration < magnitude:
-            count = duration // magnitude
-            durations.append(f'{count}{unit}')
-            duration -= count * unit
-   if len(durations) == 0:
-       return 'just now'
-   return ', '.join(durations)
+
+
+def format_duration(seconds):
+    if not seconds:
+        return "now"
+
+    chunks = []
+    for name, secs in times:
+        qty = seconds // secs
+        qty = int(qty)
+        if qty:
+            if qty > 1:
+                name += "s"
+            chunks.append(str(qty)+" "+name)
+
+        seconds = seconds % secs
+
+    return ','.join(chunks[:-1]) + ' and ' + chunks[-1] \
+        if len(chunks) > 1 \
+        else chunks[0]
 
 #end of the commands abt the cards
 #----------------------------embeds-------------------------------------------------------
