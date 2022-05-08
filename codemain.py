@@ -1,3 +1,4 @@
+from base64 import urlsafe_b64decode
 from enum import IntFlag
 import os
 import discord
@@ -75,7 +76,7 @@ def set_inv_data(inv_data):
 def get_card(id):
     return GROUP_DATA["pictures"].get(id, None)
 
-BIO_FILE = "biography.json"
+BIO_FILE = "bios.json"
 
 def get_bio_data():
     try:
@@ -89,6 +90,64 @@ def set_bio_data(bio_data):
     with open(BIO_FILE, "w") as bio_file:
         json.dump(bio_data, bio_file)
 
+FAV_FILE = "favorite.json"
+
+def get_fav_data():
+    try:
+        with open (FAV_FILE, "r") as fav_file:
+            fav_data = json.load(fav_file)
+        return fav_data 
+    except FileNotFoundError:
+        return {}
+
+def set_fav_data(fav_data):
+    with open(FAV_FILE, "w") as fav_file:
+        json.dump(fav_data, fav_file)
+
+def get_card(id):
+    return GROUP_DATA["pictures"].get(id, None)
+
+class UserFavorite:
+    def __init__(self, id):
+        self.id = str(id)
+        self.bios = None
+        self.load()
+    
+    def load(self):
+        user = get_fav_data().get(self.id, None)
+        if user is None:
+            self.fav = ' '
+        else:
+            self.fav = user.get('favorite', {})
+
+    def save(self):
+        users = get_fav_data()
+        if self.id in users:
+            users[self.id]['favorite'] = self.fav
+        else:
+            users[self.id] = { 'favorite': self.fav }
+        set_fav_data(users)
+
+    def get_fav(self):
+        return self.fav
+
+    def list_cards(self):
+        for card_id in self.fav:
+            
+            return (card_id, get_card(card_id))
+
+    def set_fav(self, card_id):
+        self.fav = card_id 
+        self.save()
+
+    def add_card(self, card_id):
+        self.fav = card_id
+        self.save()
+
+    def remove_card(self):
+        self.fav = ' '
+        self.save()
+
 class UserBiography:
     def __init__(self, id):
         self.id = str(id)
@@ -98,7 +157,7 @@ class UserBiography:
     def load(self):
         user = get_bio_data().get(self.id, None)
         if user is None:
-            self.bios = "Nothing to see here"
+            self.bios = " "
         else:
             self.bios = user.get('biography', {})
 
@@ -138,9 +197,9 @@ class UserAccount:
     def save(self):
         users = get_bank_data()
         if self.id in users:
-            users[self.id]['wallet'] = self.wallet
+            users[self.id]['wallet'] = list(self.wallet)
         else:
-            users[self.id] = { 'wallet': self.wallet }
+            users[self.id] = { 'wallet': list(self.wallet) }
         set_bank_data(users)
 
     def get_balance(self):
@@ -838,22 +897,24 @@ async def profile(ctx, user:discord.Member=None):
     balance = UserAccount(user.id)
     emoji = EMOJIS["coin"]
     biography = UserBiography(user.id)
+    favorite = UserFavorite(user.id)
+    card_id = favorite.get_fav()
+    card = get_card(card_id)
     
     em = discord.Embed(title = f"{user.name}'s Profile")
-    em.add_field(name = f"bio : `{biography.get_bio ()}`" , value = f"👤 User: {user.mention} \n \
-        🗃️ Cards: \n 💰 Balance: {balance.get_balance()} {emoji} \n 💙 Favorite:")
-    em.set_author(name = ctx.author.name, icon_url=ctx.author.avatar_url)
+    em.add_field(name = f"bio : `{biography.get_bio ()}`" , value = f"👤 **User:** {user.mention} \n \
+        🗃️ **Cards:** \n 💰 **Balance:** {balance.get_balance()} {emoji} \n 💙 **Favorite:** {favorite.get_fav()}")
+    em.set_image(url = card['url'])
+    em.set_author(name = f"{ctx.author.name}'s request", icon_url=ctx.author.avatar_url)
     await ctx.send(embed = em)
 
 @bot.command(aliases=["bio"])
-async def biography(ctx, message=None):
-    if message == None:
-        message = " "
+async def biography(ctx, *arg):
     bio = UserBiography(ctx.author.id)
-    em = discord.Embed(description = "Your Bio was successfully updated.", color=0x1ad39f)
+    em = discord.Embed(description = f"Your Bio was successfully updated as {' '.join(arg)}.", color=0x1ad39f)
     em.set_author(name = f"{ctx.author.name}'s Bio", icon_url=ctx.author.avatar_url)
     await ctx.send(embed = em)
-    bio.add_bio(message)
+    bio.add_bio(" ".join(arg))
 
 @bot.command(aliases=["fav", "f"])
 async def favorite(ctx, card_id=None):
@@ -864,10 +925,12 @@ async def favorite(ctx, card_id=None):
         return await ctx.send("That card doesn't exist !")
     user = ctx.author
     inventory = UserInventory(user.id)
+    favorite = UserFavorite(user.id)
     if not inventory.has_card(card_id):
         return await ctx.send("You don't have that card !")
     em = discord.Embed(description = f"You successfully add {format_name(card['member'])} as your favorite", color = 0x1ad39f)
     em.set_author(name = f"{ctx.author.name} is setting a favorite card", icon_url = ctx.author.avatar_url)
+    em.set_image(url = card['url'])
     await ctx.send(embed = em)
     favorite.add_card(card_id)
 
