@@ -13,7 +13,7 @@ os.chdir(BOT_DIR)
 
 #------------------------------globals------------------------------------
 
-PREFIX = "o"
+PREFIX = "m"
 
 GROUP_DATA = None
 with open('groups.json', 'rb') as f:
@@ -103,6 +103,23 @@ def get_fav_data():
 def set_fav_data(fav_data):
     with open(FAV_FILE, "w") as fav_file:
         json.dump(fav_data, fav_file)
+
+def get_card(id):
+    return GROUP_DATA["pictures"].get(id, None)
+
+SHOP_FILE = "shop.json"
+
+def get_shop_data():
+    try:
+        with open(SHOP_FILE, "r") as shop_file:
+            shop_list = json.load(shop_file)
+        return shop_list
+    except FileNotFoundError:
+        return {}
+
+def set_shop_data(shop_data):
+    with open(SHOP_FILE, "w") as shop_file:
+        json.dump(shop_data, shop_file)
 
 def get_card(id):
     return GROUP_DATA["pictures"].get(id, None)
@@ -197,9 +214,9 @@ class UserAccount:
     def save(self):
         users = get_bank_data()
         if self.id in users:
-            users[self.id]['wallet'] = list(self.wallet)
+            users[self.id]['wallet'] = self.wallet
         else:
-            users[self.id] = { 'wallet': list(self.wallet) }
+            users[self.id] = { 'wallet': self.wallet }
         set_bank_data(users)
 
     def get_balance(self):
@@ -255,8 +272,51 @@ class UserInventory:
         for card_id in self.cards:
             
             yield (card_id, get_card(card_id))
-    
 
+class UserShop:
+    def __init__(self, id):
+        self.id = str(id)
+        self.shop = None
+        self.card = None
+        self.load()
+
+    def load(self):
+        user = get_shop_data().get(self.id, None)
+        if user is None:
+            self.shop = set()
+            self.card = set()
+        else:
+            self.shop = set(user.get('price', 0))
+            self.card = set(user.get('card', {}))
+
+    def save(self):
+        users = get_shop_data()
+        if self.id in users:
+            users[self.id]['price'] = list(self.shop)
+            users[self.id]['card'] = list(self.card)
+        else:
+            users[self.id] = { 'card': list(self.card), 'price': list(self.shop) }
+        set_shop_data(users)
+
+    def get_shop(self):
+        return self.shop
+    
+    def set_shop(self, amount):
+        self.shop = amount
+        self.save()
+    
+    def add_card(self, card_id):
+        self.card.add(card_id)
+        self.save()
+
+    def add_shop(self, amount):
+        self.shop.add(amount)
+        self.save()
+
+    def list_shop(self):
+        for card_id in self.card:
+            
+            yield (card_id, get_card(card_id))
 
 #-----------------------------ready-----------------------------------------------------
 
@@ -962,6 +1022,52 @@ async def work(ctx):
     await ctx.send(embed = em)
 
     account.add_balance(earnings)
+
+#----------------------------shop-------------------------------------------------------
+
+@bot.command()
+async def sell(ctx, card_id, amount):
+    shop_list = UserShop(ctx.author.id)
+    emoji = EMOJIS["coin"]
+
+    em = discord.Embed(
+        title = f"You succesfully sell {card_id} for {amount} {emoji}!",
+        color = 0x1ad39f
+    )
+    await ctx.send(embed = em)
+    shop_list.add_shop(amount)
+    shop_list.add_card(card_id)
+
+@bot.command()
+async def sales(ctx, user:discord.Member=None):
+    user = user or ctx.author
+    shop_list = UserShop(user.id)
+
+    names = [
+        format_name(card['member']) + "\n" + card['code'] + '\n' + card['rarity'] + '\n'
+        for (_, card) in shop_list.list_shop()
+    ]
+    names = sorted(names)
+    if len(names) > 0:
+        names = ''.join(names)
+    else:
+        names = 'Empty'
+
+    em = discord.Embed(
+        color = 0x1ad39f
+    )
+    em.set_author(
+        name= f"{ctx.author}'s request ",
+        icon_url = ctx.author.avatar_url
+    )
+    em.add_field(name = f"{user.name}'s sales", value = names, inline=False)
+    await ctx.send(embed = em)
+
+def format_name(id):
+    parts = id.split(':')
+    name = parts[1]
+    group = parts[0]
+    return "**" + group + "**" + ' ' + name
 
 #----------------------------daily------------------------------------------------------
 
