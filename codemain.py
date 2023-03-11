@@ -1,4 +1,3 @@
-from base64 import urlsafe_b64decode
 from enum import IntFlag
 import os
 import discord
@@ -276,47 +275,50 @@ class UserInventory:
 class UserShop:
     def __init__(self, id):
         self.id = str(id)
+        self.cards = None
+        self.price = None
         self.shop = None
-        self.card = None
         self.load()
 
     def load(self):
         user = get_shop_data().get(self.id, None)
+
         if user is None:
+            self.cards = ' '
+            self.price = ' '
             self.shop = set()
-            self.card = set()
         else:
-            self.shop = set(user.get('price', 0))
-            self.card = set(user.get('card', {}))
+            self.cards = user.get('cards', [])
+            self.price = user.get('price', [])
+            self.shop = set(user.get('shop', []))
 
     def save(self):
         users = get_shop_data()
         if self.id in users:
-            users[self.id]['price'] = list(self.shop)
-            users[self.id]['card'] = list(self.card)
+            users[self.id]['shop'] = {list(self.cards), list(self.price)}
         else:
-            users[self.id] = { 'card': list(self.card), 'price': list(self.shop) }
+            users[self.id] = { 'shop': list(self.shop) }
         set_shop_data(users)
 
-    def get_shop(self):
-        return self.shop
-    
-    def set_shop(self, amount):
-        self.shop = amount
-        self.save()
-    
     def add_card(self, card_id):
-        self.card.add(card_id)
+        self.cards.add(card_id)
+        self.save()
+    
+    def remove_card(self, card_id): 
+        self.cards.remove(card_id)
         self.save()
 
-    def add_shop(self, amount):
-        self.shop.add(amount)
-        self.save()
-
+    def has_card(self, card_id):
+        return card_id in self.cards
+    
     def list_shop(self):
-        for card_id in self.card:
+        for card_id in self.cards:
             
             yield (card_id, get_card(card_id))
+    
+    def add_price(self, price):
+        self.price.add(price)
+        self.save()
 
 #-----------------------------ready-----------------------------------------------------
 
@@ -1035,8 +1037,8 @@ async def sell(ctx, card_id, amount):
         color = 0x1ad39f
     )
     await ctx.send(embed = em)
-    shop_list.add_shop(amount)
     shop_list.add_card(card_id)
+    shop_list.add_price(amount)
 
 @bot.command()
 async def sales(ctx, user:discord.Member=None):
@@ -1324,8 +1326,3 @@ async def clear_error(ctx, error):
         await ctx.send("You can't do this!")
 
 #end of mod commands
-
-with open("token.0", "r") as f:
-    bottoken = f.read()
-
-bot.run(bottoken)
